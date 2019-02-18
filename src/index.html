@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- Based on Nicholas C. Zakas post: -->
+<!-- credit: http://www.nczonline.net/blog/2010/09/07/learning-from-xauth-cross-domain-localstorage/ -->
+<html>
+<head><title>Random ID orchestrator - Kee Vault</title><meta name="robots" content="none"></head>
+<body>
+<script type="text/javascript">
+(function(){
+    var whitelist = [];
+    
+    // If this instance has been asked to supply a value once, we 
+    // will forever send messages to the original instance when
+    // we detect changes to the value in our local storage
+    var updateList = [];
+
+    function verifyOrigin(origin){
+        try {
+            const url = new URL(origin);
+            console.log("origin hostname: " + url.hostname);
+            if (url.protocol !== "https:") return false;
+            if (url.hostname.endsWith(".kee.pm")) return true;
+            if (url.hostname === "keevault.pm") return true;
+            if (whitelist.indexOf(url.hostname) >= 0) return true;
+        } catch (e) {}
+        return false;
+    }
+
+    function handleRequest(event){
+        if (verifyOrigin(event.origin)) {
+            try {
+                var request = JSON.parse(event.data);
+                var storage = request.storage;
+                
+                if (request.type == 'get') {
+                    value = window[storage].getItem(request.key);
+                    event.source.postMessage(JSON.stringify({
+                        id: request.id,
+                        key:request.key,
+                        value: value
+                    }), event.origin);
+                    updateList.push(event);
+                } else if (request.type == 'set') {
+                    window[storage].setItem(request.key, request.value);
+                } else if(request.type == 'remove') {
+                    window[storage].removeItem(request.key);
+                }
+            } catch (e) {}
+        }
+    }
+
+    window.addEventListener("storage", function (e) {
+        while( (ev = updateList.shift()) !== undefined ) {
+            ev.source.postMessage(JSON.stringify({
+                    type: 'onSet',
+                    key: e.key,
+                    value: e.newValue
+                }), ev.origin);
+        }
+    });
+
+    if(window.addEventListener) {
+        window.addEventListener("message", handleRequest, false);
+    } else if (window.attachEvent) {
+        window.attachEvent("onmessage", handleRequest);
+    }
+})();
+</script>
+</body>
+</html>

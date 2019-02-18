@@ -1,0 +1,25 @@
+format_version: 3
+pipelines:
+  ridkeepm:
+    environment_variables:
+      AWS_PROFILE: "keeProd"
+      AWS_REGION: "eu-west-2"
+    group: defaultGroup
+    materials:
+      mygit:
+        type: configrepo
+    stages:
+      - publish:
+          jobs:
+            defaultJob:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - "-c"
+                      - "aws s3 sync src/ s3://rid.kee.pm"
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - "-c"
+                      - "aws cloudfront create-invalidation --distribution-id EANT8UZ70A854 --paths /\\*"
