@@ -4,7 +4,7 @@ pipelines:
     environment_variables:
       AWS_PROFILE: "keeProd"
       AWS_REGION: "eu-west-2"
-    group: defaultGroup
+    group: websites
     materials:
       mygit:
         type: configrepo
