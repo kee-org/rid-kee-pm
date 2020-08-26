@@ -13,7 +13,11 @@ EMBED USING A SANDBOX: <iframe sandbox="allow-same-origin allow-scripts" ...
 -->
 <script type="text/javascript">
 (function(){
-    var whitelist = [];
+    var whitelist = [
+        "dev-keevault-cors-protection.localhost",
+        "beta-keevault-cors-protection.localhost",
+        "prod-keevault-cors-protection.localhost"
+    ];
     
     // If this instance has been asked to supply a value once, we 
     // will forever send messages to the original instance when
@@ -24,10 +28,10 @@ EMBED USING A SANDBOX: <iframe sandbox="allow-same-origin allow-scripts" ...
         try {
             const url = new URL(origin);
             console.log("origin hostname: " + url.hostname);
+            if (whitelist.indexOf(url.hostname) >= 0) return true;
             if (url.protocol !== "https:") return false;
             if (url.hostname.endsWith(".kee.pm")) return true;
             if (url.hostname === "keevault.pm") return true;
-            if (whitelist.indexOf(url.hostname) >= 0) return true;
         } catch (e) {}
         return false;
     }
